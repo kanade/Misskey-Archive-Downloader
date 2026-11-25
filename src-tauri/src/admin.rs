@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 use tauri::{Emitter, Manager};
 use tokio::io::AsyncBufReadExt;
 
-use crate::{error_chain, with_headers};
+use crate::{error_chain, user_agent, with_headers};
 
 #[derive(Deserialize)]
 pub struct DbConfig {
@@ -87,6 +87,7 @@ pub async fn admin_post_json(
 ) -> Result<HttpResponse, String> {
     let client = reqwest::Client::builder()
         .timeout(Duration::from_secs(120))
+        .user_agent(user_agent())
         .build()
         .map_err(|e| error_chain(&e))?;
     let resp = with_headers(client.post(&url), headers)

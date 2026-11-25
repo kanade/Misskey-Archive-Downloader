@@ -21,6 +21,18 @@ pub(crate) fn error_chain(e: &dyn std::error::Error) -> String {
     message
 }
 
+/// User-Agent for requests sent from Rust. reqwest sends none by default, and Misskey's media proxy (`/proxy/`)
+/// answers 400 without one. It must not contain `misskey/` (case-insensitive): the media proxy refuses those with 403.
+/// The version is the one in `src/version.ts`, which `npm run build` / `build:admin` rewrites before the Rust build.
+pub(crate) fn user_agent() -> String {
+    #[cfg(feature = "admin")]
+    const NAME: &str = "Misskey-Archive-Downloader-for-Admin";
+    #[cfg(not(feature = "admin"))]
+    const NAME: &str = "Misskey-Archive-Downloader";
+    let version = include_str!("../../src/version.ts").split('\'').nth(1).unwrap_or("unknown");
+    format!("{NAME}/{version} (+https://github.com/kanade/Misskey-Archive-Downloader)")
+}
+
 /// Adds the extra request headers (name → value) the frontend passed. Their values are not logged.
 pub(crate) fn with_headers(
     mut request: reqwest::RequestBuilder,
@@ -40,6 +52,7 @@ async fn fetch_bytes(
 ) -> Result<tauri::ipc::Response, String> {
     let client = reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(30))
+        .user_agent(user_agent())
         .build()
         .map_err(|e| e.to_string())?;
 

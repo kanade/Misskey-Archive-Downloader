@@ -43,6 +43,7 @@ npm run tauri:build:admin  # 管理者アプリをビルド
 | `src/types/misskey.ts` | Misskey API の型と `ArchiveNote` / `ArchiveDriveFile`（`localPath` を持つ） |
 | `src/components/LogPanel.tsx`・`src/lib/log.ts`・`src/lib/use-log.ts` | ログ欄（本ツールのエクスポート画面と管理者アプリの右側。狭いときは下）。時刻付きで全文を出し、コピー・保存・クリアができる。1 回のエクスポートで数万行になるので、`useLog` は 200 ms ごとにまとめて画面へ反映する |
 | `src/admin/` | 管理者アプリ: `AdminApp.tsx`（画面）、`standard-exports.ts`（`i/export-*` の依頼と結果の待ち受け）、`url-rewrite.ts`、`admin-bridge.ts` |
+| `src-tauri/src/lib.rs` | デスクトップ版の Rust 側（`fetch_bytes`・保存の IPC・管理者アプリのコマンドの登録）。Rust から送る通信（`fetch_bytes`・`admin_post_json`）には `user_agent()` の User-Agent を付ける: `Misskey-Archive-Downloader/<版> (+<リポジトリの URL>)`（管理者アプリは `Misskey-Archive-Downloader-for-Admin/<版>`）。版は `src/version.ts` を `include_str!` で読む。Misskey の `/proxy/` は User-Agent が無いと 400、小文字にして `misskey/` を含むと 403 を返すので、User-Agent は必ず付け、`misskey/` を含めない。WebView の `fetch`（本ツールの API と MiAuth の確認）は WebView の User-Agent のまま |
 | `src-tauri/src/admin.rs` | 管理者アプリ専用のコマンド: `admin_find_user`（PostgreSQL、読み取りのみ）、`admin_post_json`（Rust からの API 送信）、`admin_tunnel_open` / `admin_tunnel_close`（SSH のポート転送） |
 
 ### ZIP の中身
