@@ -12,7 +12,24 @@ concurrency:
 
 jobs:
   build:
-    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            label: windows-x64
+            args: --no-bundle
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            label: macos-x64
+            args: --bundles dmg
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            label: macos-arm64
+            args: --bundles dmg
+
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
 
@@ -24,6 +41,8 @@ jobs:
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
 
       - name: Rust cache
         uses: swatinem/rust-cache@v2
@@ -34,19 +53,46 @@ jobs:
         run: npm ci
 
       - name: Build admin app
-        run: npm run tauri:build:admin -- --no-bundle
+        run: npm run tauri:build:admin -- --target ${{ matrix.target }} ${{ matrix.args }}
 
-      - name: Collect binary
-        shell: bash
+      - name: Upload exe (Windows)
+        if: runner.os == 'Windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: admin-${{ matrix.label }}
+          path: src-tauri/target/${{ matrix.target }}/release/misskey-archive-admin.exe
+          if-no-files-found: error
+
+      - name: Upload dmg (macOS)
+        if: runner.os == 'macOS'
+        uses: actions/upload-artifact@v4
+        with:
+          name: admin-${{ matrix.label }}
+          path: src-tauri/target/${{ matrix.target }}/release/bundle/dmg/*.dmg
+          if-no-files-found: error
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Rename to fixed asset names
         run: |
           mkdir -p release
-          cp src-tauri/target/release/misskey-archive-admin.exe release/Misskey-Archive-Downloader-for-Admin.exe
+          cp artifacts/admin-windows-x64/misskey-archive-admin.exe release/Misskey-Archive-Downloader-for-Admin.exe
+          find artifacts/admin-macos-x64 -name '*.dmg' \
+            -exec cp {} release/Misskey-Archive-Downloader-for-Admin-macos-x64.dmg \;
+          find artifacts/admin-macos-arm64 -name '*.dmg' \
+            -exec cp {} release/Misskey-Archive-Downloader-for-Admin-macos-arm64.dmg \;
           ls -la release
 
       # Updating a release in place keeps its original publish date and tag commit,
       # so the release and its tag are deleted and created again for each build.
       - name: Delete previous "admin-latest" release
-        shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
@@ -62,7 +108,27 @@ jobs:
           target_commitish: ${{ github.sha }}
           name: Admin build
           body: |
-            管理者アプリの最新ビルド（コミット ${{ github.sha }}）
+            閉鎖した Misskey サーバーの管理者が、登録していたユーザーの代わりに、アーカイブと Misskey 標準のエクスポートを作るためのアプリです。サーバーのデータベースと Misskey に接続して使うので、一般の利用者向けではありません。
+            このリリースのファイルは、GitHub Actions がコミット ${{ github.sha }} からビルドしたものです。
+
+            ## ファイル
+
+            - `Misskey-Archive-Downloader-for-Admin.exe` … Windows（x64）版。そのまま開きます。インストールは不要です
+            - `Misskey-Archive-Downloader-for-Admin-macos-arm64.dmg` … macOS（Apple Silicon）版
+            - `Misskey-Archive-Downloader-for-Admin-macos-x64.dmg` … macOS（Intel）版
+
+            ## 使う前に
+
+            - データベース（PostgreSQL）からは、ユーザーの検索に必要な行を読むだけで、書き込みはしません
+            - 標準エクスポートを選ぶと、そのユーザーのドライブにエクスポートのファイルが作られます
+            - SSH のポート転送は、PC の `ssh` コマンドで行います（鍵・ssh-agent・`~/.ssh/config` はターミナルと同じように使えます）
+
+            ## 初めて開くとき
+
+            - Windows: 署名していないので、SmartScreen の警告が出ることがあります。「詳細情報」→「実行」で開けます
+            - macOS: Apple の公証を受けていないので、警告が出ます。次のどちらかで開けます
+              - 一度開こうとしたあと、「システム設定」→「プライバシーとセキュリティ」→「このまま開く」
+              - ターミナルで `xattr -dr com.apple.quarantine "/Applications/Misskey Archive Admin.app"`
           prerelease: false
           make_latest: false
           files: release/*

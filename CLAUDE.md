@@ -81,8 +81,8 @@ archive.zip
 
 ### 管理者アプリ
 
-閉鎖したサーバーの管理者向けの、別ビルドの Windows アプリ。ローカルユーザーの代わりに、アーカイブと Misskey の標準エクスポートを作り、1 つの ZIP にまとめる（標準エクスポートは `exports/` の下）。
-- 同じソースからビルドする: `admin.html` → `src/admin/main.tsx`、`vite build --mode admin`（→ `dist-admin/`）、`src-tauri/tauri.admin.conf.json`（`tauri.conf.json` に重ねてマージする。Cargo の feature `admin` を有効にし、`tokio-postgres` と管理者用のコマンドが加わる）。本ツールのビルドにはどれも含まれない。CI は `.github/workflows/admin-build.yml`（手動実行のみ）→ リリース `admin-latest`。
+閉鎖したサーバーの管理者向けの、別ビルドの Windows・macOS アプリ。ローカルユーザーの代わりに、アーカイブと Misskey の標準エクスポートを作り、1 つの ZIP にまとめる（標準エクスポートは `exports/` の下）。
+- 同じソースからビルドする: `admin.html` → `src/admin/main.tsx`、`vite build --mode admin`（→ `dist-admin/`）、`src-tauri/tauri.admin.conf.json`（`tauri.conf.json` に重ねてマージする。Cargo の feature `admin` を有効にし、`tokio-postgres` と管理者用のコマンドが加わる）。本ツールのビルドにはどれも含まれない。CI は `.github/workflows/admin-build.yml`（手動実行のみ）。Windows x64（`--no-bundle`）と macOS の x64・arm64（`--bundles dmg`）をビルドし、リリース `admin-latest` に `Misskey-Archive-Downloader-for-Admin.exe`・`Misskey-Archive-Downloader-for-Admin-macos-x64.dmg`・`Misskey-Archive-Downloader-for-Admin-macos-arm64.dmg` を置く。リリースの説明文は両方のワークフローの `body:` に書く。
 - `user` テーブルから読んだ、そのユーザーのネイティブトークンで認証する。`i/export-*` は `secure` なので MiAuth のトークンでは拒否される。ネイティブトークンだと `i` が `email` / `emailVerified` / `securityKeysList` も返すため、アーカイブに入れる前に取り除く。
 - API の送信は `MisskeyClient` の `ApiTransport`（Rust の `admin_post_json`）を通すので、サーバーに `http://` のローカルアドレスで接続できる。
 - SSH のポート転送: `admin_tunnel_open` が PC の `ssh` コマンドを `-N -L 127.0.0.1:<空きポート>:<host>:<port>`（PostgreSQL と Misskey の 2 つ）、`BatchMode=yes`、`StrictHostKeyChecking=accept-new`、`ExitOnForwardFailure=yes` で起動し、両方のローカルポートが接続を受け付けるまで待つ。ssh の標準エラーは `admin-tunnel-log` イベントでログ欄に出す。プロセスは `TunnelState` に持ち、次の `admin_tunnel_open`・`admin_tunnel_close`・アプリの終了（`RunEvent::Exit`）で止める。Windows では `CREATE_NO_WINDOW` でコンソールを出さない。SSH を使うとき、画面の Misskey の URL と PostgreSQL のホストはサーバーから見た場所として扱う。

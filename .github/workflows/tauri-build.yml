@@ -141,7 +141,22 @@ jobs:
           target_commitish: ${{ github.sha }}
           name: Latest build
           body: |
-            最新の自動ビルド（コミット ${{ github.sha }}）
+            Misskey のノートとドライブのファイルを、ブラウザで見られるアーカイブ（ZIP）にまとめるツールのデスクトップ版です。
+            このリリースのファイルは、GitHub Actions がコミット ${{ github.sha }} からビルドしたものです。
+
+            ## ファイル
+
+            - `Windows-x64.zip` … Windows（x64）版。解凍して `misskey-archive-downloader.exe` を開きます。インストールは不要です
+            - `macos-arm64.dmg` … macOS（Apple Silicon）版
+            - `macos-x64.dmg` … macOS（Intel）版
+            - `index.html.zip` … 差し替え用のビューア。解凍した `index.html` を、作成済みのアーカイブの `index.html` と差し替えると、作り直さずにビューアだけ新しくできます
+
+            ## 初めて開くとき
+
+            - Windows: 署名していないので、SmartScreen の警告が出ることがあります。「詳細情報」→「実行」で開けます
+            - macOS: Apple の公証を受けていないので、警告が出ます。次のどちらかで開けます
+              - 一度開こうとしたあと、「システム設定」→「プライバシーとセキュリティ」→「このまま開く」
+              - ターミナルで `xattr -dr com.apple.quarantine "/Applications/Misskey Archive Downloader.app"`
           prerelease: false
           make_latest: true
           files: release/*

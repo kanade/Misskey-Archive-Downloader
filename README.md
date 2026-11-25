@@ -94,7 +94,7 @@ Webアプリのトップページのダウンロードリンクは、配布用�
 
 ## 管理者アプリ（閉鎖したサーバーの代理エクスポート）
 
-閉鎖したサーバーの管理者が、登録していたユーザーの代わりにアーカイブと Misskey 標準のエクスポートを作るための Windows アプリです。本ツールとは別にビルドします。
+閉鎖したサーバーの管理者が、登録していたユーザーの代わりにアーカイブと Misskey 標準のエクスポートを作るための Windows・macOS アプリです。本ツールとは別にビルドします。macOS で初めて開くときは、本ツールと同じ手順で許可します（アプリ名は `Misskey Archive Admin.app`）。
 
 - サーバーの DB から対象ユーザーのトークン（`user` テーブルの `token` 列）を読み、そのユーザーとしてサーバーの API を呼びます。DB へは読み取りのみです
 - 作るもの（1 つの ZIP にまとめます）
@@ -128,7 +128,11 @@ Webアプリのトップページのダウンロードリンクは、配布用�
 
 ### ビルド
 
-GitHub Actions の「Build Admin App」を手動で実行すると、リリース [`admin-latest`](https://github.com/kanade/Misskey-Archive-Downloader/releases/tag/admin-latest) に `Misskey-Archive-Downloader-for-Admin.exe` を置きます。
+GitHub Actions の「Build Admin App」を手動で実行すると、リリース [`admin-latest`](https://github.com/kanade/Misskey-Archive-Downloader/releases/tag/admin-latest) に次のファイルを置きます。
+
+- `Misskey-Archive-Downloader-for-Admin.exe`（Windows x64）
+- `Misskey-Archive-Downloader-for-Admin-macos-arm64.dmg`（macOS Apple Silicon）
+- `Misskey-Archive-Downloader-for-Admin-macos-x64.dmg`（macOS Intel）
 
 ## 開発
 
