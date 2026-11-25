@@ -1,0 +1,35 @@
+{
+  "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
+  "productName": "Misskey Archive Admin",
+  "mainBinaryName": "misskey-archive-admin",
+  "identifier": "club.mfmf.misskey-archive-admin",
+  "build": {
+    "frontendDist": "../dist-admin",
+    "devUrl": "http://localhost:1421",
+    "beforeDevCommand": "npm run dev:admin",
+    "beforeBuildCommand": "npm run build:admin",
+    "features": ["admin"]
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Misskey Archive Admin",
+        "url": "admin.html",
+        "width": 1240,
+        "height": 940,
+        "center": true,
+        "minWidth": 480,
+        "minHeight": 500,
+        "resizable": true,
+        "fullscreen": false
+      }
+    ]
+  },
+  "plugins": {
+    "deep-link": {
+      "desktop": {
+        "schemes": []
+      }
+    }
+  }
+}

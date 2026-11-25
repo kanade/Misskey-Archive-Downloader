@@ -1,0 +1,68 @@
+name: Build Admin App
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-admin-latest
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Build admin app
+        run: npm run tauri:build:admin -- --no-bundle
+
+      - name: Collect binary
+        shell: bash
+        run: |
+          mkdir -p release
+          cp src-tauri/target/release/misskey-archive-admin.exe release/Misskey-Archive-Downloader-for-Admin.exe
+          ls -la release
+
+      # Updating a release in place keeps its original publish date and tag commit,
+      # so the release and its tag are deleted and created again for each build.
+      - name: Delete previous "admin-latest" release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          if gh release view admin-latest > /dev/null 2>&1; then
+            gh release delete admin-latest --cleanup-tag --yes
+          fi
+
+      - name: Create "admin-latest" release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: admin-latest
+          target_commitish: ${{ github.sha }}
+          name: Admin build
+          body: |
+            管理者アプリの最新ビルド（コミット ${{ github.sha }}）
+          prerelease: false
+          make_latest: false
+          files: release/*

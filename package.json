@@ -1,0 +1,43 @@
+{
+  "name": "misskey-archive-viewer",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "node scripts/bump-version.mjs && tsc -b && vite build",
+    "build:viewer": "node scripts/build-viewer.mjs dist-viewer",
+    "lint": "eslint .",
+    "preview": "vite preview",
+    "tauri": "tauri",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "tauri build",
+    "dev:admin": "vite --mode admin",
+    "build:admin": "node scripts/bump-version.mjs && tsc -b && vite build --mode admin",
+    "tauri:dev:admin": "tauri dev --config src-tauri/tauri.admin.conf.json",
+    "tauri:build:admin": "tauri build --config src-tauri/tauri.admin.conf.json"
+  },
+  "dependencies": {
+    "@zip.js/zip.js": "2.8.61",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@tailwindcss/vite": "^4.3.0",
+    "@tauri-apps/api": "^2.11.0",
+    "@tauri-apps/cli": "^2.11.2",
+    "@types/node": "^24.12.3",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^4.7.0",
+    "eslint": "^10.3.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.2",
+    "globals": "^17.6.0",
+    "tailwindcss": "^4.3.0",
+    "typescript": "~6.0.2",
+    "typescript-eslint": "^8.59.2",
+    "vite": "^5.4.21"
+  }
+}
